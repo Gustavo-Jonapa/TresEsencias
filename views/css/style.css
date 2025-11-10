@@ -1,0 +1,127 @@
+:root {
+    --primary-color: #8C451C;
+    --secondary-color: #F28322;
+    --accent-color: #F3F2F1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 100%;
+}
+
+.navbar-brand {
+    letter-spacing: 1px;
+}
+
+.nav-link {
+    font-weight: 500;
+    /*transition: all 0.3s ease;*/
+    margin: 0 5px;
+    color: #C8C4C1;
+}
+
+.nav-link:hover {
+    color: var(--accent-color) !important;
+    /*transform: translateY(-2px);*/
+}
+
+.carousel-img {
+    height: 500px;
+    object-fit: cover;
+    filter: brightness(0.7);
+}
+
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2rem;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+}
+
+.carousel-caption h1 {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/*
+.card-custom {
+    transition: all 0.3s ease;
+}
+
+.card-custom:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.card-custom:hover .icon-circle {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(242, 131, 34, 0.4);
+}
+*/
+/* Formularios */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(242, 131, 34, 0.25);
+}
+
+.form-control-lg {
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .carousel-img {
+        height: 300px;
+    }
+    
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+    
+    .carousel-caption p {
+        font-size: 1rem;
+    }
+}
+
+/* Animaciones *
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+
+.alert {
+    border-radius: 10px;
+    border: none;
+    font-weight: 500;
+}
+*/

@@ -1,0 +1,14 @@
+# Habilitar RewriteEngine
+RewriteEngine On
+RewriteBase /
+
+# Redirigir todo a index.php excepto archivos y directorios existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Denegar acceso a archivos .php en la carpeta views directamente
+<FilesMatch "^(views|models|controllers).*\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

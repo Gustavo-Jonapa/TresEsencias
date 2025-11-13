@@ -5,6 +5,12 @@ class CalificacionController {
     public function index() {
         $pageTitle = "Calificaciones - Tres Esencias";
         
+        $calificacionModel = new Calificacion();
+        
+        $estadisticas = $calificacionModel->obtenerPromedio();
+        
+        $calificacionesRecientes = $calificacionModel->obtenerRecientes(5);
+        
         require_once "views/layouts/header.php";
         require_once "views/calificacion/index.php";
         require_once "views/layouts/footer.php";
@@ -33,10 +39,27 @@ class CalificacionController {
                 'email' => $email
             ]);
 
-            $_SESSION['mensaje'] = "¡Gracias por tu calificación! Tu opinión es muy importante para nosotros.";
+            if ($resultado && isset($resultado['Status']) && $resultado['Status'] === 'OK') {
+                $_SESSION['mensaje'] = "¡Gracias por tu calificación! Tu opinión es muy importante para nosotros.";
+            } else {
+                $_SESSION['error'] = $resultado['Mensaje'] ?? "Error al guardar la calificación";
+            }
+            
             header('Location: index.php?controller=calificacion');
             exit();
         }
+    }
+    
+    public function ver() {
+        $pageTitle = "Todas las Calificaciones - Tres Esencias";
+        
+        $calificacionModel = new Calificacion();
+        $todasCalificaciones = $calificacionModel->obtenerTodas(50);
+        $estadisticas = $calificacionModel->obtenerPromedio();
+        
+        require_once "views/layouts/header.php";
+        require_once "views/calificacion/todas.php";
+        require_once "views/layouts/footer.php";
     }
 }
 ?>

@@ -28,6 +28,8 @@
     <div class="card mb-4 shadow border-0">
         <div class="card-body p-4">
             <h3 class="fw-bold mb-4" style="color: #F28322;">Mis Reservaciones</h3>
+            
+            <?php if (!empty($misReservaciones)): ?>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead style="background-color: #8C451C; color: white;">
@@ -41,44 +43,58 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($misReservaciones)): ?>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">No tienes reservaciones.</td>
-                        </tr>
-                        <?php else: ?>
                         <?php foreach ($misReservaciones as $reservacion): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($reservacion['fecha']); ?></td>
-                            <td><?php echo htmlspecialchars($reservacion['hora']); ?></td>
-                            <td><?php echo htmlspecialchars($reservacion['mesa_numero']); ?></td>
-                            <td><?php echo htmlspecialchars($reservacion['personas']); ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($reservacion['FECHA'])); ?></td>
+                            <td><?php echo date('H:i', strtotime($reservacion['HORA'])); ?></td>
+                            <td>Mesa <?php echo $reservacion['NUMERO_MESA'] ?? $reservacion['ID_MESA']; ?></td>
+                            <td><?php echo $reservacion['PERSONAS']; ?> persona<?php echo $reservacion['PERSONAS'] > 1 ? 's' : ''; ?></td>
                             <td>
-                                <?php if ($reservacion['estado'] == 'confirmada'): ?>
-                                    <span class="badge bg-success">Confirmada</span>
-                                <?php elseif ($reservacion['estado'] == 'cancelada'): ?>
-                                    <span class="badge bg-danger">Cancelada</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary">Pendiente</span>
-                                <?php endif; ?>
+                                <?php 
+                                $estadoClass = '';
+                                $estadoTexto = $reservacion['ESTADO'];
+                                
+                                switch($reservacion['ESTADO']) {
+                                    case 'PENDIENTE':
+                                        $estadoClass = 'bg-warning';
+                                        break;
+                                    case 'CONFIRMADA':
+                                        $estadoClass = 'bg-success';
+                                        break;
+                                    case 'CANCELADA':
+                                        $estadoClass = 'bg-danger';
+                                        break;
+                                    case 'COMPLETADA':
+                                        $estadoClass = 'bg-info';
+                                        break;
+                                    default:
+                                        $estadoClass = 'bg-secondary';
+                                }
+                                ?>
+                                <span class="badge <?php echo $estadoClass; ?>"><?php echo $estadoTexto; ?></span>
                             </td>
                             <td>
-                                <?php if ($reservacion['estado'] == 'confirmada'): ?>
-                                <button class="btn btn-sm btn-primary me-2" onclick="editarReservacion(<?php echo $reservacion['id']; ?>)">
-                                    <i class="bi bi-pencil-fill"></i> Editar
+                                <?php if ($reservacion['ESTADO'] == 'PENDIENTE' || $reservacion['ESTADO'] == 'CONFIRMADA'): ?>
+                                <button class="btn btn-sm btn-warning" onclick="editarReservacion(<?php echo $reservacion['ID_RESERVACION']; ?>, '<?php echo $reservacion['FECHA']; ?>', '<?php echo $reservacion['HORA']; ?>', <?php echo $reservacion['PERSONAS']; ?>, <?php echo $reservacion['ID_MESA']; ?>)">
+                                    <i class="bi bi-pencil"></i> Editar
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="cancelarReservacion(<?php echo $reservacion['id']; ?>)">
-                                    <i class="bi bi-x-circle-fill"></i> Cancelar
+                                <button class="btn btn-sm btn-danger" onclick="cancelarReservacion(<?php echo $reservacion['ID_RESERVACION']; ?>)">
+                                    <i class="bi bi-x-circle"></i> Cancelar
                                 </button>
                                 <?php else: ?>
-                                <span class="text-muted">No disponibles</span>
+                                <span class="text-muted">No disponible</span>
                                 <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
+            <?php else: ?>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No tienes reservaciones activas. ¡Crea una nueva reservación abajo!
+            </div>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
@@ -87,21 +103,32 @@
         <div class="card-body p-5">
             <h3 class="fw-bold mb-4" style="color: #F28322;">Nueva Reservación</h3>
             
+            <?php if (!isset($_SESSION['usuario_id'])): ?>
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> 
+                Debes <a href="index.php?controller=auth&action=login" class="alert-link">iniciar sesión</a> 
+                para hacer una reservación.
+            </div>
+            <?php endif; ?>
+            
             <form action="index.php?controller=reservacion&action=crear" method="POST" id="formReservacion">
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Fecha</label>
                         <input type="date" name="fecha" id="fecha" class="form-control form-control-lg" required 
-                               min="<?php echo date('Y-m-d'); ?>">
+                               min="<?php echo date('Y-m-d'); ?>"
+                               <?php echo !isset($_SESSION['usuario_id']) ? 'disabled' : ''; ?>>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Hora</label>
                         <input type="time" name="hora" id="hora" class="form-control form-control-lg" required
-                               min="13:00" max="23:00">
+                               min="13:00" max="23:00"
+                               <?php echo !isset($_SESSION['usuario_id']) ? 'disabled' : ''; ?>>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Personas</label>
-                        <select name="personas" id="personas" class="form-select form-select-lg" required onchange="filtrarMesas()">
+                        <select name="personas" id="personas" class="form-select form-select-lg" required onchange="filtrarMesas()"
+                                <?php echo !isset($_SESSION['usuario_id']) ? 'disabled' : ''; ?>>
                             <option value="">Seleccionar</option>
                             <?php for($i = 1; $i <= 8; $i++): ?>
                             <option value="<?php echo $i; ?>">
@@ -116,29 +143,38 @@
                     <h4 class="fw-bold mb-3">Selecciona una mesa</h4>
                     <p class="text-muted">Primero selecciona el número de personas para ver las mesas disponibles</p>
                     <div class="row g-3" id="listaMesas">
-                        <?php foreach ($mesas as $mesa): ?>
-                        <div class="col-md-2 col-6 mesa-item" data-capacidad="<?php echo $mesa['capacidad']; ?>" style="display: none;">
-                            <input type="radio" class="btn-check" name="mesa_id" id="mesa<?php echo $mesa['id']; ?>" 
-                                   value="<?php echo $mesa['id']; ?>" required
-                                   <?php echo !$mesa['disponible'] ? 'disabled' : ''; ?>>
-                            <label class="btn w-100 <?php echo $mesa['disponible'] ? 'btn-outline-success' : 'btn-outline-danger'; ?>" 
-                                   for="mesa<?php echo $mesa['id']; ?>"
-                                   style="<?php echo !$mesa['disponible'] ? 'opacity: 0.5; cursor: not-allowed;' : ''; ?>">
-                                <strong>Mesa <?php echo $mesa['numero']; ?></strong><br>
-                                <small><?php echo $mesa['capacidad']; ?> personas</small><br>
-                                <small class="<?php echo $mesa['disponible'] ? 'text-success' : 'text-danger'; ?>">
-                                    <?php echo $mesa['disponible'] ? 'Disponible' : 'Ocupada'; ?>
-                                </small>
-                            </label>
-                        </div>
-                        <?php endforeach; ?>
+                        <?php if (!empty($mesas)): ?>
+                            <?php foreach ($mesas as $mesa): ?>
+                            <div class="col-md-2 col-6 mesa-item" data-capacidad="<?php echo $mesa['capacidad']; ?>" style="display: none;">
+                                <input type="radio" class="btn-check" name="mesa_id" id="mesa<?php echo $mesa['id']; ?>" 
+                                       value="<?php echo $mesa['id']; ?>" required
+                                       <?php echo !$mesa['disponible'] ? 'disabled' : ''; ?>
+                                       <?php echo !isset($_SESSION['usuario_id']) ? 'disabled' : ''; ?>>
+                                <label class="btn w-100 <?php echo $mesa['disponible'] ? 'btn-outline-success' : 'btn-outline-danger'; ?>" 
+                                       for="mesa<?php echo $mesa['id']; ?>"
+                                       style="<?php echo !$mesa['disponible'] ? 'opacity: 0.5; cursor: not-allowed;' : ''; ?>">
+                                    <strong>Mesa <?php echo $mesa['numero']; ?></strong><br>
+                                    <small><?php echo $mesa['capacidad']; ?> personas</small><br>
+                                    <small class="<?php echo $mesa['disponible'] ? 'text-success' : 'text-danger'; ?>">
+                                        <?php echo $mesa['disponible'] ? 'Disponible' : 'Ocupada'; ?>
+                                    </small>
+                                </label>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12">
+                                <div class="alert alert-warning">No hay mesas disponibles en este momento.</div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <button type="submit" name="envio" class="btn btn-lg w-100 fw-bold text-white" style="background-color: #F28322; border: none;">
-                            <i class="bi bi-pass"></i> Reservar
+                        <button type="submit" name="envio" class="btn btn-lg w-100 fw-bold text-white" 
+                                style="background-color: #F28322; border: none;"
+                                <?php echo !isset($_SESSION['usuario_id']) ? 'disabled' : ''; ?>>
+                            <i class="bi bi-check-circle"></i> Reservar
                         </button>
                     </div>
                 </div>
@@ -147,6 +183,7 @@
     </div>
 </div>
 
+<!-- Modal para Editar Reservación -->
 <div class="modal fade" id="modalEditarReservacion" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -157,20 +194,23 @@
             <div class="modal-body">
                 <form id="formEditarReservacion">
                     <input type="hidden" name="reservacion_id" id="edit_reservacion_id">
+                    <input type="hidden" name="mesa_id" id="edit_mesa_id">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Fecha</label>
-                            <input type="date" name="fecha" id="edit_fecha" class="form-control" required>
+                            <input type="date" name="fecha" id="edit_fecha" class="form-control" required
+                                   min="<?php echo date('Y-m-d'); ?>">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Hora</label>
-                            <input type="time" name="hora" id="edit_hora" class="form-control" required>
+                            <input type="time" name="hora" id="edit_hora" class="form-control" required
+                                   min="13:00" max="23:00">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Personas</label>
                             <select name="personas" id="edit_personas" class="form-select" required>
                                 <?php for($i = 1; $i <= 8; $i++): ?>
-                                <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                                <option value="<?php echo $i; ?>"><?php echo $i; ?> persona<?php echo $i > 1 ? 's' : ''; ?></option>
                                 <?php endfor; ?>
                             </select>
                         </div>
@@ -221,11 +261,12 @@ function filtrarMesas() {
     }
 }
 
-function editarReservacion(id) {
+function editarReservacion(id, fecha, hora, personas, mesaId) {
     document.getElementById('edit_reservacion_id').value = id;
-    document.getElementById('edit_fecha').value = '2025-10-25';
-    document.getElementById('edit_hora').value = '19:00';
-    document.getElementById('edit_personas').value = '4';
+    document.getElementById('edit_fecha').value = fecha;
+    document.getElementById('edit_hora').value = hora;
+    document.getElementById('edit_personas').value = personas;
+    document.getElementById('edit_mesa_id').value = mesaId;
     
     const modal = new bootstrap.Modal(document.getElementById('modalEditarReservacion'));
     modal.show();
@@ -245,8 +286,12 @@ function guardarEdicion() {
             alert('Reservación actualizada exitosamente');
             location.reload();
         } else {
-            alert('Error al actualizar la reservación');
+            alert('Error: ' + (data.message || 'No se pudo actualizar la reservación'));
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar la reservación');
     });
 }
 
@@ -265,16 +310,21 @@ function cancelarReservacion(id) {
                 alert('Reservación cancelada exitosamente');
                 location.reload();
             } else {
-                alert('Error al cancelar la reservación');
+                alert('Error: ' + (data.message || 'No se pudo cancelar la reservación'));
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cancelar la reservación');
         });
     }
+}
+
 function verificarDisponibilidadMesa(idMesa) {
     const fecha = document.getElementById('fecha').value;
     const hora = document.getElementById('hora').value;
     
     if (!fecha || !hora) {
-        alert('Selecciona primero la fecha y hora');
         return;
     }
     
@@ -282,21 +332,29 @@ function verificarDisponibilidadMesa(idMesa) {
         .then(response => response.json())
         .then(data => {
             if (!data.disponible) {
-                alert('Esta mesa no está disponible para la fecha y hora seleccionadas');
-                document.getElementById('mesa' + idMesa).disabled = true;
+                const radioButton = document.getElementById('mesa' + idMesa);
+                if (radioButton) {
+                    radioButton.disabled = true;
+                    radioButton.parentElement.classList.remove('btn-outline-success');
+                    radioButton.parentElement.classList.add('btn-outline-danger');
+                }
             }
-        });
+        })
+        .catch(error => console.error('Error:', error));
 }
 
-document.getElementById('fecha').addEventListener('change', actualizarDisponibilidad);
-document.getElementById('hora').addEventListener('change', actualizarDisponibilidad);
+// Actualizar disponibilidad
+document.getElementById('fecha')?.addEventListener('change', actualizarDisponibilidad);
+document.getElementById('hora')?.addEventListener('change', actualizarDisponibilidad);
 
 function actualizarDisponibilidad() {
     const mesas = document.querySelectorAll('.mesa-item');
     mesas.forEach(mesa => {
-        const idMesa = mesa.dataset.mesaId;
-        verificarDisponibilidadMesa(idMesa);
+        const input = mesa.querySelector('input[type="radio"]');
+        if (input) {
+            const idMesa = input.value;
+            verificarDisponibilidadMesa(idMesa);
+        }
     });
-}
 }
 </script>

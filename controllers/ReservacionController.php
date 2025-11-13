@@ -9,6 +9,11 @@ class ReservacionController {
         $reservacionModel = new Reservacion();
         $mesas = $reservacionModel->obtenerMesas();
         
+        $misReservaciones = [];
+        if (isset($_SESSION['usuario_id'])) {
+            $misReservaciones = $reservacionModel->obtenerPorCliente($_SESSION['usuario_id']);
+        }
+        
         require_once "views/layouts/header.php";
         require_once "views/reservaciones/index.php";
         require_once "views/layouts/footer.php";
@@ -113,6 +118,7 @@ class ReservacionController {
             exit();
         }
     }
+    
     public function verificarDisponibilidad() {
         header('Content-Type: application/json');
         
